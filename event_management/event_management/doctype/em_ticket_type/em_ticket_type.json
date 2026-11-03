@@ -1,0 +1,105 @@
+{
+ "actions": [],
+ "allow_bulk_edit": 1,
+ "allow_rename": 1,
+ "autoname": "EM-TKT-.#####",
+ "creation": "2026-11-03 12:50:06.900554",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "ticket_details_section",
+  "ticket_name",
+  "event",
+  "price",
+  "total_quantity",
+  "column_break_nrnf",
+  "available_from",
+  "available_until",
+  "is_active"
+ ],
+ "fields": [
+  {
+   "fieldname": "ticket_details_section",
+   "fieldtype": "Section Break",
+   "label": "Ticket Details"
+  },
+  {
+   "fieldname": "ticket_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Ticket Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "event",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Event",
+   "options": "EM Event",
+   "reqd": 1
+  },
+  {
+   "fieldname": "price",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Price",
+   "reqd": 1
+  },
+  {
+   "fieldname": "total_quantity",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Total Quantity",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_nrnf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "available_from",
+   "fieldtype": "Datetime",
+   "label": "Available From"
+  },
+  {
+   "fieldname": "available_until",
+   "fieldtype": "Datetime",
+   "label": "Available Until"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "label": "Is Active"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-11-03 12:54:36.392679",
+ "modified_by": "Administrator",
+ "module": "Event Management",
+ "name": "EM Ticket Type",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "ticket_name"
+}

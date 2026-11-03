@@ -1,0 +1,86 @@
+{
+ "actions": [],
+ "allow_bulk_edit": 1,
+ "allow_rename": 1,
+ "autoname": "EM-ADD-.#####",
+ "creation": "2026-11-03 12:58:10.614269",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "event_add_on_section",
+  "add_on_name",
+  "event",
+  "price",
+  "total__quantity",
+  "is_active"
+ ],
+ "fields": [
+  {
+   "fieldname": "event_add_on_section",
+   "fieldtype": "Section Break",
+   "label": "Event Add On"
+  },
+  {
+   "fieldname": "add_on_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Add On Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "event",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Event",
+   "options": "EM Event",
+   "reqd": 1
+  },
+  {
+   "fieldname": "price",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Price",
+   "reqd": 1
+  },
+  {
+   "fieldname": "total__quantity",
+   "fieldtype": "Int",
+   "label": "Total  Quantity"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "label": "Is Active"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-11-03 13:00:41.850328",
+ "modified_by": "Administrator",
+ "module": "Event Management",
+ "name": "EM Add On",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "add_on_name"
+}

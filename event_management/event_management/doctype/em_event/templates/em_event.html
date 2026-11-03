@@ -1,0 +1,22 @@
+{% extends "templates/web.html" %}
+
+{% block page_content %}
+<div class="container my-5">
+	<h1>{{ doc.event_name | e }}</h1>
+	<p>{{ doc.description | e }}</p>
+	<p><strong>Venue:</strong> {{ doc.venue | e }}</p>
+	<p><strong>Starts:</strong> {{ doc.get_formatted("start_date") }}</p>
+	<p><strong>Ends:</strong> {{ doc.get_formatted("end_date") }}</p>
+
+	<h2>Ticket Types</h2>
+	<ul>
+		{% for ticket in ticket_types %}
+		<li>{{ ticket.ticket_name | e }} — {{ frappe.format_value(ticket.price, {"fieldtype": "Currency"}) }}</li>
+		{% endfor %}
+	</ul>
+
+	<a href="/event-registration/new?event={{ doc.name | urlencode }}">Register Now</a>
+</div>
+{% endblock %}
+
+<!-- this is a sample default web page template -->

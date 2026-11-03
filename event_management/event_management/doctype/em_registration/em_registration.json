@@ -1,0 +1,161 @@
+{
+ "actions": [],
+ "allow_bulk_edit": 1,
+ "allow_rename": 1,
+ "autoname": "EM-REG-.#####",
+ "creation": "2026-11-03 13:04:55.724514",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "personal_details_section",
+  "attendee_name",
+  "email",
+  "mobile_number",
+  "event_details_section",
+  "event",
+  "ticket_type",
+  "quantity",
+  "total_amount",
+  "registration_date",
+  "status",
+  "ticket_code",
+  "checked_in",
+  "check_in_time",
+  "column_break_zyqk",
+  "add_ons"
+ ],
+ "fields": [
+  {
+   "fieldname": "personal_details_section",
+   "fieldtype": "Section Break",
+   "label": "Personal Details"
+  },
+  {
+   "fieldname": "attendee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Attendee Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Email",
+   "reqd": 1
+  },
+  {
+   "fieldname": "mobile_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Mobile Number",
+   "options": "Phone",
+   "reqd": 1
+  },
+  {
+   "fieldname": "event_details_section",
+   "fieldtype": "Section Break",
+   "label": "Event Details"
+  },
+  {
+   "fieldname": "event",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Event",
+   "options": "EM Event",
+   "reqd": 1
+  },
+  {
+   "fieldname": "ticket_type",
+   "fieldtype": "Link",
+   "label": "Ticket Type",
+   "options": "EM Ticket Type",
+   "reqd": 1
+  },
+  {
+   "fieldname": "quantity",
+   "fieldtype": "Int",
+   "label": "Quantity",
+   "reqd": 1
+  },
+  {
+   "fieldname": "total_amount",
+   "fieldtype": "Currency",
+   "label": "Total Amount"
+  },
+  {
+   "default": "Today",
+   "fieldname": "registration_date",
+   "fieldtype": "Date",
+   "label": "Registration Date"
+  },
+  {
+   "default": "Pending",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "\nPending\nConfirmed\nCancelled",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_zyqk",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "add_ons",
+   "fieldtype": "Table",
+   "label": "Add Ons",
+   "options": "EM Registration Add On"
+  },
+  {
+   "fieldname": "ticket_code",
+   "fieldtype": "Data",
+   "label": "Ticket Code",
+   "read_only": 1,
+   "unique": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "checked_in",
+   "fieldtype": "Check",
+   "label": "Checked In",
+   "read_only": 1
+  },
+  {
+   "fieldname": "check_in_time",
+   "fieldtype": "Datetime",
+   "label": "Check in Time",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-11-03 14:04:50.972027",
+ "modified_by": "Administrator",
+ "module": "Event Management",
+ "name": "EM Registration",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "attendee_name"
+}

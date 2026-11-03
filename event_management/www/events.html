@@ -1,0 +1,17 @@
+{% extends "templates/web.html" %}
+
+{% block page_content %}
+<div class="container my-5">
+	<h1>Upcoming Events</h1>
+	{% for event in events %}
+		<div class="mb-4">
+			<h2><a href="/{{ event.route | e }}">{{ event.event_name | e }}</a></h2>
+			<p><strong>Venue:</strong> {{ event.venue | e }}</p>
+			<p><strong>Starts:</strong> {{ frappe.utils.format_datetime(event.start_date) }}</p>
+			<p>{{ event.description | e }}</p>
+		</div>
+	{% else %}
+		<p>No upcoming events.</p>
+	{% endfor %}
+</div>
+{% endblock %}

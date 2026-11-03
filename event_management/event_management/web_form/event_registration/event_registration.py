@@ -1,8 +1,5 @@
 import frappe
-
-
-def get_context(context):
-	pass
+from frappe.utils import get_datetime, now_datetime
 
 
 def get_list_context(context):
@@ -13,7 +10,9 @@ def get_list_context(context):
 def get_registrations(doctype, txt, filters, limit_start, limit_page_length, order_by):
 	if frappe.session.user == "Guest":
 		return []
-
+	if doctype != "EM Registration":
+		frappe.throw("Invalid registration list.", frappe.PermissionError)
+	filters = dict(filters or {})
 	filters["owner"] = frappe.session.user
 	if txt:
 		filters["name"] = ["like", f"%{txt}%"]
@@ -29,15 +28,25 @@ def get_registrations(doctype, txt, filters, limit_start, limit_page_length, ord
 
 @frappe.whitelist()
 def get_event_options(event):
-	if not frappe.db.exists("EM Event", {"name": event, "published": 1}):
+	if not frappe.db.exists("EM Event", {
+		"name": event, "published": 1, "status": "Published",
+		"start_date": [">", now_datetime()],
+	}):
 		return {"tickets": [], "add_ons": []}
 
+	now = now_datetime()
+	tickets = frappe.get_all(
+		"EM Ticket Type",
+		filters={"event": event, "is_active": 1},
+		fields=["name", "ticket_name", "price", "available_from", "available_until"],
+	)
 	return {
-		"tickets": frappe.get_all(
-			"EM Ticket Type",
-			filters={"event": event, "is_active": 1},
-			fields=["name", "ticket_name", "price"],
-		),
+		"tickets": [
+			{"name": ticket.name, "ticket_name": ticket.ticket_name, "price": ticket.price}
+			for ticket in tickets
+			if (not ticket.available_from or get_datetime(ticket.available_from) <= now)
+			and (not ticket.available_until or now <= get_datetime(ticket.available_until))
+		],
 		"add_ons": frappe.get_all(
 			"EM Add On",
 			filters={"event": event, "is_active": 1},

@@ -1,21 +1,72 @@
-import base64
-
 import frappe
 from frappe.model.document import Document
 from frappe.utils import cint, flt, get_datetime, now_datetime
-from frappe.utils.print_format_generator import get_qr_code
 
 
 class EMRegistration(Document):
 	def validate(self):
-		self.lock_existing_registration()
-		self.validate_status()
 		self.validate_quantity()
 		self.validate_event_and_ticket()
-		self.validate_ticket_availability()
 		self.validate_add_ons()
+		self.lock_existing_registration()
+		self.validate_status()
+		self.validate_ticket_availability()
 		self.validate_capacity()
 		self.calculate_total()
+		self.validate_issued_tickets()
+
+	def on_update(self):
+		if self.status == "Confirmed":
+			self.issue_tickets()
+		elif self.status == "Cancelled":
+			for ticket in frappe.db.get_all("EM Ticket", filters={"registration": self.name, "status": "Issued"}, pluck="name"):
+				frappe.db.set_value("EM Ticket", ticket, "status", "Cancelled")
+
+	def validate_issued_tickets(self):
+		if self.is_new():
+			return
+		previous_total = frappe.db.get_value("EM Registration", self.name, "total_amount")
+		if flt(previous_total) > 0 and flt(self.total_amount) <= 0:
+			frappe.throw("A paid registration cannot be changed to a free registration.")
+		tickets = frappe.db.get_all(
+			"EM Ticket", filters={"registration": self.name},
+			fields=["name", "event", "ticket_type", "status"],
+		)
+		if not tickets:
+			return
+		if self.status != "Cancelled" and flt(previous_total) <= 0 and flt(self.total_amount) > 0:
+			frappe.throw("Issued free tickets cannot become payable.")
+		if any(ticket.status == "Checked In" for ticket in tickets) and self.status == "Cancelled":
+			frappe.throw("Checked-in tickets cannot be cancelled.")
+		if self.status != "Cancelled" and (
+			len(tickets) != cint(self.quantity)
+			or any(ticket.event != self.event or ticket.ticket_type != self.ticket_type for ticket in tickets)
+		):
+			frappe.throw("Issued ticket quantity, event, and ticket type cannot be changed.")
+
+	def issue_tickets(self):
+		if self.status != "Confirmed":
+			return
+		if flt(self.total_amount) > 0:
+			return
+		from event_management.event_management.doctype.em_ticket.em_ticket import make_token
+
+		existing = frappe.db.get_all("EM Ticket", filters={"registration": self.name}, pluck="name")
+		if existing:
+			if len(existing) != cint(self.quantity):
+				frappe.throw("Ticket issuance is incomplete; manual review is required.")
+			return
+		was_issuing = frappe.flags.em_ticket_issuance
+		frappe.flags.em_ticket_issuance = True
+		try:
+			for _ in range(cint(self.quantity)):
+				frappe.get_doc({
+					"doctype": "EM Ticket", "registration": self.name, "event": self.event,
+					"ticket_type": self.ticket_type, "attendee_name": self.attendee_name,
+					"token": make_token(), "status": "Issued",
+				}).insert(ignore_permissions=True)
+		finally:
+			frappe.flags.em_ticket_issuance = was_issuing
 
 	def lock_existing_registration(self):
 		if self.is_new():
@@ -152,39 +203,9 @@ class EMRegistration(Document):
 
 @frappe.whitelist()
 def check_in(registration):
-	if "System Manager" not in frappe.get_roles():
-		frappe.throw("Only Event managers can check in attendees.", frappe.PermissionError)
-	doc = frappe.get_doc("EM Registration", registration)
-	doc.check_permission("write")
-	current = frappe.db.get_value(
-		"EM Registration", registration, ["status", "checked_in"], for_update=True
-	)
-	if not current:
-		frappe.throw("Registration does not exist.")
-	status, checked_in = current
-	if status != "Confirmed":
-		frappe.throw("Only confirmed registrations can be checked in.")
-	if checked_in:
-		frappe.throw("Registration is already checked in.")
-	frappe.db.set_value("EM Registration", registration, {
-		"checked_in": 1,
-		"check_in_time": now_datetime(),
-	})
+	frappe.throw("Scan an issued EM Ticket to check in an attendee.")
 
 
 @frappe.whitelist()
 def ticket_qr_code(ticket_code):
-	registration = frappe.db.get_value("EM Registration", {"ticket_code": ticket_code}, "name")
-	if not registration:
-		frappe.throw("Invalid Ticket Code")
-	doc = frappe.get_doc("EM Registration", registration)
-	is_manager = "System Manager" in frappe.get_roles()
-	if not is_manager and doc.owner != frappe.session.user:
-		frappe.throw("Not permitted to view this ticket.", frappe.PermissionError)
-	if is_manager:
-		doc.check_permission("read")
-	frappe.response.filename = "ticket-qr.svg"
-	frappe.response.filecontent = base64.b64decode(get_qr_code(ticket_code).split(",", 1)[1])
-	frappe.response.content_type = "image/svg+xml"
-	frappe.response.display_content_as = "inline"
-	frappe.response.type = "download"
+	frappe.throw("Registration ticket codes are no longer valid; use issued EM Tickets.")

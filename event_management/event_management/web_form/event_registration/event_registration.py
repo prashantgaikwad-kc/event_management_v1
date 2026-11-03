@@ -2,6 +2,10 @@ import frappe
 from frappe.utils import get_datetime, now_datetime
 
 
+def get_context(context):
+	return context
+
+
 def get_list_context(context):
 	context.get_list = get_registrations
 	return context

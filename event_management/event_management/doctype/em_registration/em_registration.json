@@ -22,7 +22,11 @@
   "checked_in",
   "check_in_time",
   "column_break_zyqk",
-  "add_ons"
+  "add_ons",
+  "section_break_gypg",
+  "payment_status",
+  "payment_reference",
+  "payment_gateway"
  ],
  "fields": [
   {
@@ -127,12 +131,37 @@
    "fieldtype": "Datetime",
    "label": "Check in Time",
    "read_only": 1
+  },
+  {
+   "fieldname": "section_break_gypg",
+   "fieldtype": "Section Break",
+   "label": "Payment Details"
+  },
+  {
+   "fieldname": "payment_status",
+   "fieldtype": "Select",
+   "label": "Payment Status",
+   "options": "\nUnpaid\nPending\nPaid\nFailed\nRefunded",
+   "read_only": 1
+  },
+  {
+   "fieldname": "payment_reference",
+   "fieldtype": "Data",
+   "label": "Payment Reference",
+   "read_only": 1
+  },
+  {
+   "fieldname": "payment_gateway",
+   "fieldtype": "Select",
+   "label": "Payment Gateway",
+   "options": "Razorpay",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-11-03 14:04:50.972027",
+ "modified": "2026-11-03 17:20:29.174021",
  "modified_by": "Administrator",
  "module": "Event Management",
  "name": "EM Registration",

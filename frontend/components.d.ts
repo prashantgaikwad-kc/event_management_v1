@@ -13,8 +13,9 @@ declare module 'vue' {
   export interface GlobalComponents {
     EventRegistration: typeof import('./src/components/EventRegistration.vue')['default']
     GateScanner: typeof import('./src/components/GateScanner.vue')['default']
-    HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
+    MyRegistrations: typeof import('./src/components/MyRegistrations.vue')['default']
     MyTickets: typeof import('./src/components/MyTickets.vue')['default']
+    OrganizerDashboard: typeof import('./src/components/OrganizerDashboard.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
   }

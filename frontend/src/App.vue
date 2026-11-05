@@ -4,7 +4,9 @@ import { ref, onMounted } from 'vue'
 import { Button, call } from 'frappe-ui'
 import EventRegistration from './components/EventRegistration.vue'
 import MyTickets from './components/MyTickets.vue'
+import MyRegistrations from './components/MyRegistrations.vue'
 import GateScanner from './components/GateScanner.vue'
+import OrganizerDashboard from './components/OrganizerDashboard.vue'
 
 interface TicketType {
   name: string
@@ -37,8 +39,11 @@ const events = ref<EventSummary[]>([])
 const selectedEvent = ref<EventDetails | null>(null)
 const selectedTicket = ref<TicketType | null>(null)
 const showingMyTickets = ref(false)
+const showingMyRegistrations = ref(false)
 const showingGateScanner = ref(false)
+const showingOrganizerDashboard = ref(false)
 const canScanTickets = ref(false)
+const canViewOrganizerDashboard = ref(false)
 const loading = ref(false)
 const error = ref('')
 
@@ -107,8 +112,10 @@ onMounted(() => {
   loadEvents()
   call<string[]>('frappe.core.doctype.user.user.get_current_user_roles').then((roles) => {
     canScanTickets.value = roles.includes('EM Gate Staff') || roles.includes('System Manager')
+    canViewOrganizerDashboard.value = roles.includes('EM Organizer') || roles.includes('System Manager')
   }).catch(() => {
     canScanTickets.value = false
+    canViewOrganizerDashboard.value = false
   })
 })
 </script>
@@ -117,7 +124,9 @@ onMounted(() => {
   <div class="min-h-screen bg-gray-50 p-6">
     <div class="mx-auto max-w-6xl">
       <GateScanner v-if="showingGateScanner && canScanTickets" @back="showingGateScanner = false" />
+      <OrganizerDashboard v-else-if="showingOrganizerDashboard && canViewOrganizerDashboard" @back="showingOrganizerDashboard = false" />
       <MyTickets v-else-if="showingMyTickets" @back="showingMyTickets = false" />
+      <MyRegistrations v-else-if="showingMyRegistrations" @back="showingMyRegistrations = false" />
       <EventRegistration
         v-else-if="selectedEvent && selectedTicket"
         :event="selectedEvent"
@@ -206,8 +215,14 @@ onMounted(() => {
         <Button class="mt-4" variant="subtle" @click="showingMyTickets = true">
           My Tickets
         </Button>
+        <Button class="ml-2 mt-4" variant="subtle" @click="showingMyRegistrations = true">
+          My Registrations
+        </Button>
         <Button v-if="canScanTickets" class="ml-2 mt-4" variant="subtle" @click="showingGateScanner = true">
           Gate Scanner
+        </Button>
+        <Button v-if="canViewOrganizerDashboard" class="ml-2 mt-4" variant="subtle" @click="showingOrganizerDashboard = true">
+          Organizer Dashboard
         </Button>
 
         <p v-if="!loading && error" class="mt-6 text-red-600">

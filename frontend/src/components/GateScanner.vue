@@ -10,7 +10,58 @@ const scanning = ref(false)
 const submitting = ref(false)
 const message = ref('')
 const error = ref('')
+interface TicketMatch {
+  name: string
+  attendee_name: string
+  event: string
+  ticket_type: string
+  status: string
+}
+const searchQuery = ref('')
+const matches = ref<TicketMatch[]>([])
+const hasSearched = ref(false)
+const searching = ref(false)
+const checkingIn = ref(false)
+const manualMessage = ref('')
+const manualError = ref('')
 let scanner: QrScanner | null = null
+
+async function searchTickets() {
+  if (!searchQuery.value.trim() || searching.value) return
+  searching.value = true
+  hasSearched.value = false
+  matches.value = []
+  manualError.value = ''
+  try {
+    matches.value = await call<TicketMatch[]>(
+      'event_management.event_management.doctype.em_ticket.em_ticket.search_tickets',
+      { query: searchQuery.value.trim() },
+    )
+    hasSearched.value = true
+  } catch (cause) {
+    manualError.value = (cause as Error).message || 'Unable to search tickets.'
+  } finally {
+    searching.value = false
+  }
+}
+
+async function manualCheckIn(ticket: TicketMatch) {
+  if (ticket.status !== 'Issued' || checkingIn.value) return
+  if (!window.confirm(`Check in ${ticket.attendee_name} for ${ticket.event} (${ticket.ticket_type})?`)) return
+  checkingIn.value = true
+  manualMessage.value = ''
+  manualError.value = ''
+  try {
+    await call('event_management.event_management.doctype.em_ticket.em_ticket.manual_check_in',
+      { ticket_id: ticket.name })
+    manualMessage.value = `${ticket.attendee_name} checked in successfully.`
+  } catch (cause) {
+    manualError.value = (cause as Error).message || 'Unable to check in ticket.'
+  } finally {
+    checkingIn.value = false
+    await searchTickets()
+  }
+}
 
 function stopScanner() {
   scanner?.destroy()
@@ -94,6 +145,36 @@ onBeforeUnmount(stopScanner)
 
       <p v-if="message" class="mt-4 text-green-700" role="status">{{ message }}</p>
       <p v-if="error" class="mt-4 text-red-600" role="alert">{{ error }}</p>
+    </div>
+
+    <div class="mt-6 max-w-3xl rounded-lg border bg-white p-5 shadow-sm">
+      <h3 class="text-lg font-semibold">Manual Check-in</h3>
+      <label for="attendee-search" class="mt-4 block font-medium">Attendee name or email</label>
+      <div class="mt-2 flex gap-2">
+        <input id="attendee-search" v-model="searchQuery" type="search" autocomplete="off"
+          class="w-full rounded border px-3 py-2" placeholder="Search attendees"
+          @keyup.enter="searchTickets" />
+        <Button :disabled="searching || checkingIn || !searchQuery.trim()" @click="searchTickets">
+          {{ searching ? 'Searching...' : 'Search' }}
+        </Button>
+      </div>
+      <p v-if="manualMessage" class="mt-4 text-green-700" role="status">{{ manualMessage }}</p>
+      <p v-if="manualError" class="mt-4 text-red-600" role="alert">{{ manualError }}</p>
+      <div v-if="matches.length" class="mt-4 overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead><tr class="border-b"><th class="p-2">Attendee</th><th class="p-2">Event</th><th class="p-2">Ticket type</th><th class="p-2">Status</th><th class="p-2">Action</th></tr></thead>
+          <tbody>
+            <tr v-for="ticket in matches" :key="ticket.name" class="border-b">
+              <td class="p-2">{{ ticket.attendee_name }}</td>
+              <td class="p-2">{{ ticket.event }}</td>
+              <td class="p-2">{{ ticket.ticket_type }}</td>
+              <td class="p-2">{{ ticket.status }}</td>
+              <td class="p-2"><Button :disabled="ticket.status !== 'Issued' || checkingIn" @click="manualCheckIn(ticket)">Check In</Button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p v-else-if="hasSearched" class="mt-4 text-gray-600">No matching tickets.</p>
     </div>
   </div>
 </template>

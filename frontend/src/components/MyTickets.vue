@@ -46,25 +46,25 @@ onMounted(loadTickets)
 
 <template>
   <div>
-    <Button variant="subtle" @click="emit('back')">Back</Button>
-    <h2 class="mt-6 text-2xl font-semibold">My Tickets</h2>
+    <Button variant="subtle" @click="emit('back')">← Back</Button>
+    <div class="page-header"><span class="eyebrow">READY FOR ENTRY</span><h1 class="page-title">My Tickets</h1><p class="page-subtitle">All your event passes in one place.</p></div>
 
     <p v-if="loading" class="mt-6">Loading tickets...</p>
-    <p v-else-if="error" class="mt-6 text-red-600" role="alert">{{ error }}</p>
-    <p v-else-if="!tickets.length" class="mt-6">No tickets found</p>
+    <p v-else-if="error" class="feedback-error mt-6" role="alert">{{ error }}</p>
+    <div v-else-if="!tickets.length" class="empty-state"><span class="empty-icon">✦</span><h3>No tickets yet</h3><p>Your issued tickets will appear here.</p></div>
 
-    <div v-else class="mt-6 grid gap-4 md:grid-cols-2">
-      <div v-for="ticket in tickets" :key="ticket.name" class="rounded-lg border bg-white p-5 shadow-sm">
-        <h3 class="font-semibold">{{ ticket.name }}</h3>
-        <p class="mt-2"><strong>Event:</strong> {{ ticket.event }}</p>
+    <div v-else class="mt-6 grid gap-5 md:grid-cols-2">
+      <div v-for="ticket in tickets" :key="ticket.name" class="panel overflow-hidden">
+        <div class="flex items-start justify-between gap-3"><div><span class="eyebrow">EVENT PASS</span><h3 class="mt-1 text-lg font-semibold">{{ ticket.event }}</h3><p class="text-xs text-gray-500">{{ ticket.name }}</p></div><span class="status-badge" :data-status="ticket.status">{{ ticket.status }}</span></div>
+
         <p class="mt-1"><strong>Ticket Type:</strong> {{ ticket.ticket_type }}</p>
         <p class="mt-1"><strong>Attendee:</strong> {{ ticket.attendee_name }}</p>
-        <p class="mt-1"><strong>Status:</strong> {{ ticket.status }}</p>
+
         <img
           v-if="ticket.status === 'Issued' && ticket.qr_image"
           :src="ticket.qr_image"
           :alt="`QR code for ticket ${ticket.name}`"
-          class="mt-3 h-40 w-40"
+          class="ticket-qr mt-5 h-44 w-44"
         />
         <p v-if="ticket.checked_in_at" class="mt-1">
           <strong>Checked in at:</strong> {{ ticket.checked_in_at }}

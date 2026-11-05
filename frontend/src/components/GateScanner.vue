@@ -118,11 +118,11 @@ onBeforeUnmount(stopScanner)
 
 <template>
   <div>
-    <Button variant="subtle" @click="emit('back')">Back</Button>
-    <h2 class="mt-6 text-2xl font-semibold">Gate Scanner</h2>
+    <Button variant="subtle" @click="emit('back')">← Back</Button>
+    <div class="page-header"><span class="eyebrow">ENTRY MANAGEMENT</span><h1 class="page-title">Gate Scanner</h1><p class="page-subtitle">Scan a ticket or find an attendee to check them in.</p></div>
 
-    <div class="mt-6 max-w-md rounded-lg border bg-white p-5 shadow-sm">
-      <video ref="video" class="w-full rounded bg-gray-100" playsinline muted></video>
+    <div class="panel mt-6 max-w-2xl">
+      <video ref="video" class="scanner-video" playsinline muted></video>
       <div class="mt-3 flex gap-2">
         <Button v-if="!scanning" :disabled="submitting" @click="startScanner">Start Camera</Button>
         <Button v-else variant="subtle" @click="stopScanner">Stop Camera</Button>
@@ -134,7 +134,7 @@ onBeforeUnmount(stopScanner)
         v-model="credential"
         type="text"
         autocomplete="off"
-        class="mt-2 w-full rounded border px-3 py-2"
+        class="field-input mt-2"
         placeholder="Paste or scan a ticket credential"
         :disabled="submitting"
         @keyup.enter="submitTicket"
@@ -143,23 +143,23 @@ onBeforeUnmount(stopScanner)
         {{ submitting ? 'Checking in...' : 'Check In' }}
       </Button>
 
-      <p v-if="message" class="mt-4 text-green-700" role="status">{{ message }}</p>
-      <p v-if="error" class="mt-4 text-red-600" role="alert">{{ error }}</p>
+      <p v-if="message" class="feedback-success mt-4" role="status">{{ message }}</p>
+      <p v-if="error" class="feedback-error mt-4" role="alert">{{ error }}</p>
     </div>
 
-    <div class="mt-6 max-w-3xl rounded-lg border bg-white p-5 shadow-sm">
+    <div class="panel mt-6 max-w-3xl">
       <h3 class="text-lg font-semibold">Manual Check-in</h3>
       <label for="attendee-search" class="mt-4 block font-medium">Attendee name or email</label>
       <div class="mt-2 flex gap-2">
         <input id="attendee-search" v-model="searchQuery" type="search" autocomplete="off"
-          class="w-full rounded border px-3 py-2" placeholder="Search attendees"
+          class="field-input" placeholder="Search attendees"
           @keyup.enter="searchTickets" />
         <Button :disabled="searching || checkingIn || !searchQuery.trim()" @click="searchTickets">
           {{ searching ? 'Searching...' : 'Search' }}
         </Button>
       </div>
-      <p v-if="manualMessage" class="mt-4 text-green-700" role="status">{{ manualMessage }}</p>
-      <p v-if="manualError" class="mt-4 text-red-600" role="alert">{{ manualError }}</p>
+      <p v-if="manualMessage" class="feedback-success mt-4" role="status">{{ manualMessage }}</p>
+      <p v-if="manualError" class="feedback-error mt-4" role="alert">{{ manualError }}</p>
       <div v-if="matches.length" class="mt-4 overflow-x-auto">
         <table class="w-full text-left text-sm">
           <thead><tr class="border-b"><th class="p-2">Attendee</th><th class="p-2">Event</th><th class="p-2">Ticket type</th><th class="p-2">Status</th><th class="p-2">Action</th></tr></thead>

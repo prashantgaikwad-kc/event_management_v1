@@ -94,47 +94,47 @@ async function submitRegistration() {
 
 <template>
   <div>
-    <Button variant="subtle" @click="emit('back')">Back to Event</Button>
+    <Button variant="subtle" @click="emit('back')">← Back to Event</Button>
 
-    <h2 class="mt-6 text-2xl font-semibold">Register for {{ event.event_name }}</h2>
-    <p class="mt-2 text-gray-600">{{ ticket.ticket_name }} · ₹{{ ticket.price }} per ticket</p>
+    <div class="page-header"><span class="eyebrow">RESERVE YOUR PLACE</span><h1 class="page-title">Register for {{ event.event_name }}</h1>
+    <p class="page-subtitle">{{ ticket.ticket_name }} · ₹{{ ticket.price }} per ticket</p></div>
 
-    <p v-if="registrationName" class="mt-6 text-green-700">
+    <p v-if="registrationName" class="feedback-success mt-6" role="status">
       Registration {{ registrationName }} submitted. Status: Pending.
     </p>
 
-    <form v-else class="mt-6 max-w-xl space-y-4 rounded-lg border bg-white p-5" @submit.prevent="submitRegistration">
+    <form v-else class="panel mt-6 max-w-3xl space-y-5" @submit.prevent="submitRegistration">
       <label class="block">
-        <span>Attendee Name</span>
-        <input v-model="attendeeName" class="mt-1 w-full rounded border p-2" required />
+        <span class="field-label">Attendee Name</span>
+        <input v-model="attendeeName" class="field-input" required />
       </label>
       <label class="block">
-        <span>Email</span>
-        <input v-model="email" type="email" class="mt-1 w-full rounded border p-2" required />
+        <span class="field-label">Email</span>
+        <input v-model="email" type="email" class="field-input" required />
       </label>
       <label class="block">
-        <span>Mobile Number</span>
-        <input v-model="mobileNumber" type="tel" class="mt-1 w-full rounded border p-2" required />
+        <span class="field-label">Mobile Number</span>
+        <input v-model="mobileNumber" type="tel" class="field-input" required />
       </label>
       <label class="block">
-        <span>Ticket Quantity</span>
-        <input v-model.number="quantity" type="number" min="1" :max="ticket.remaining_quantity" step="1" class="mt-1 w-full rounded border p-2" required />
+        <span class="field-label">Ticket Quantity</span>
+        <input v-model.number="quantity" type="number" min="1" :max="ticket.remaining_quantity" step="1" class="field-input" required />
       </label>
 
-      <div v-if="addOns.length">
+      <div v-if="addOns.length" class="border-t border-gray-100 pt-5">
         <h3 class="font-semibold">Add-ons</h3>
-        <div v-for="addOn in addOns" :key="addOn.name" class="mt-3 flex items-center gap-3">
+        <div v-for="addOn in addOns" :key="addOn.name" class="mt-3 flex flex-wrap items-center gap-3 rounded-xl border border-gray-100 p-3">
           <label class="flex flex-1 items-center gap-2">
             <input v-model="addOn.selected" type="checkbox" />
             {{ addOn.add_on_name }} · ₹{{ addOn.price }}
           </label>
-          <input v-if="addOn.selected" v-model.number="addOn.quantity" type="number" min="1" step="1" required class="w-20 rounded border p-2" :aria-label="`${addOn.add_on_name} quantity`" />
+          <input v-if="addOn.selected" v-model.number="addOn.quantity" type="number" min="1" step="1" required class="field-input w-20" :aria-label="`${addOn.add_on_name} quantity`" />
         </div>
       </div>
 
       <p v-if="loading">Loading add-ons...</p>
-      <p v-if="error" class="text-red-600" role="alert">{{ error }}</p>
-      <p class="font-semibold">Estimated total: ₹{{ estimatedTotal }}</p>
+      <p v-if="error" class="feedback-error" role="alert">{{ error }}</p>
+      <div class="summary-box flex items-center justify-between gap-3"><span class="font-semibold text-gray-600">Estimated total</span><strong class="text-xl text-indigo-800">₹{{ estimatedTotal }}</strong></div>
       <Button type="submit" variant="solid" :disabled="loading || submitting">
         {{ submitting ? 'Submitting...' : 'Submit Registration' }}
       </Button>

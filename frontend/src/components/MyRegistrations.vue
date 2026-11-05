@@ -64,17 +64,17 @@ onMounted(loadRegistrations)
 
 <template>
   <div>
-    <Button variant="subtle" @click="emit('back')">Back</Button>
-    <h2 class="mt-6 text-2xl font-semibold">My Registrations</h2>
+    <Button variant="subtle" @click="emit('back')">← Back</Button>
+    <div class="page-header"><span class="eyebrow">YOUR BOOKINGS</span><h1 class="page-title">My Registrations</h1><p class="page-subtitle">Track your bookings and manage upcoming plans.</p></div>
     <p v-if="loading" class="mt-6">Loading registrations...</p>
-    <p v-if="error" class="mt-6 text-red-600" role="alert">{{ error }}</p>
-    <p v-if="!loading && !registrations.length" class="mt-6">No registrations found.</p>
+    <p v-if="error" class="feedback-error mt-6" role="alert">{{ error }}</p>
+    <div v-if="!loading && !registrations.length" class="empty-state"><span class="empty-icon">✦</span><h3>No registrations yet</h3><p>Your event bookings will appear here.</p></div>
 
-    <div v-if="!loading && registrations.length" class="mt-6 grid gap-4 md:grid-cols-2">
-      <div v-for="registration in registrations" :key="registration.name" class="rounded-lg border bg-white p-5 shadow-sm">
-        <h3 class="font-semibold">{{ registration.name }}</h3>
-        <p class="mt-2"><strong>Event:</strong> {{ registration.event_name }}</p>
-        <p class="mt-1"><strong>Ticket Type:</strong> {{ registration.ticket_name }}</p>
+    <div v-if="!loading && registrations.length" class="mt-6 grid gap-5 md:grid-cols-2">
+      <div v-for="registration in registrations" :key="registration.name" class="panel">
+        <div class="flex items-start justify-between gap-3"><div><span class="eyebrow">REGISTRATION</span><h3 class="mt-1 font-semibold text-gray-800">{{ registration.event_name }}</h3><p class="mt-1 text-xs text-gray-500">{{ registration.name }}</p></div><span class="status-badge" :data-status="registration.status">{{ registration.status }}</span></div>
+
+        <p class="mt-5"><strong>Ticket Type:</strong> {{ registration.ticket_name }}</p>
         <p class="mt-1"><strong>Quantity:</strong> {{ registration.quantity }}</p>
         <div class="mt-1">
           <strong>Add-ons:</strong>
@@ -85,8 +85,7 @@ onMounted(loadRegistrations)
           </ul>
           <span v-else> None</span>
         </div>
-        <p class="mt-1"><strong>Total Amount:</strong> ₹{{ registration.total_amount }}</p>
-        <p class="mt-1"><strong>Status:</strong> {{ registration.status }}</p>
+        <div class="summary-box mt-5 flex items-center justify-between"><span>Total amount</span><strong>₹{{ registration.total_amount }}</strong></div>
         <Button
           v-if="registration.can_cancel"
           class="mt-4"

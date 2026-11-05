@@ -90,28 +90,28 @@ onMounted(async () => {
 
 <template>
   <div>
-    <Button variant="subtle" @click="emit('back')">Back</Button>
-    <div class="mt-6 flex flex-wrap items-end justify-between gap-4">
+    <Button variant="subtle" @click="emit('back')">← Back</Button>
+    <div class="page-header flex flex-wrap items-end justify-between gap-4">
       <div>
-        <h2 class="text-2xl font-semibold">Organizer Dashboard</h2>
-        <p class="mt-2 text-gray-600">Registrations and attendance</p>
+        <span class="eyebrow">EVENT INTELLIGENCE</span><h1 class="page-title">Organizer Dashboard</h1>
+        <p class="page-subtitle">Registrations and attendance</p>
       </div>
       <div class="flex flex-wrap items-end gap-3">
         <label class="block text-sm font-medium">
           Event
-          <select v-model="selectedEvent" class="mt-1 block w-full min-w-48 rounded border bg-white px-3 py-2">
+          <select v-model="selectedEvent" class="field-input mt-1 block min-w-48">
             <option value="">All Events</option>
             <option v-for="event in events" :key="event.name" :value="event.name">
               {{ event.event_name }}
             </option>
           </select>
         </label>
-        <Button variant="solid" @click="exportAttendees">Export Attendees</Button>
+        <Button variant="solid" @click="exportAttendees">Export CSV</Button>
       </div>
     </div>
 
     <p v-if="loading" class="mt-6">Loading dashboard...</p>
-    <p v-if="error" class="mt-6 text-red-600" role="alert">{{ error }}</p>
+    <p v-if="error" class="feedback-error mt-6" role="alert">{{ error }}</p>
 
     <template v-if="!loading && !error && summary">
       <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -123,19 +123,19 @@ onMounted(async () => {
           { label: 'Tickets Issued', value: summary.tickets.total_issued },
           { label: 'Checked-in Tickets', value: summary.tickets.checked_in },
           { label: 'Attendance Percentage', value: `${summary.attendance_percentage}%` },
-        ]" :key="item.label" class="rounded-lg border bg-white p-5 shadow-sm">
+        ]" :key="item.label" class="panel">
           <p class="text-sm text-gray-600">{{ item.label }}</p>
-          <p class="mt-2 text-2xl font-semibold">{{ item.value }}</p>
+          <p class="metric-value mt-2">{{ item.value }}</p>
         </div>
       </div>
 
-      <div class="mt-8 rounded-lg border bg-white p-5 shadow-sm">
+      <div class="panel mt-8">
         <div class="h-72">
           <LineChart title="Registration Trend" :data="chartData" x="date" y="count" :x-axis="{ type: 'category' }" />
         </div>
       </div>
 
-      <div class="mt-8 rounded-lg border bg-white shadow-sm">
+      <div class="surface mt-8 overflow-hidden">
         <h3 class="p-5 text-lg font-semibold">Check-in Report</h3>
         <div class="overflow-x-auto">
           <table class="w-full text-left text-sm">

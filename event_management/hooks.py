@@ -147,13 +147,17 @@ app_license = "mit"
 # -----------
 # Permissions evaluated in scripted ways
 
-# permission_query_conditions = {
-# 	"Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",
-# }
-#
-# has_permission = {
-# 	"Event": "frappe.desk.doctype.event.event.has_permission",
-# }
+permission_query_conditions = {
+	"EM Event": "event_management.permissions.event_query",
+	"EM Ticket Type": "event_management.permissions.ticket_type_query",
+	"EM Add On": "event_management.permissions.add_on_query",
+}
+
+has_permission = {
+	"EM Event": "event_management.permissions.has_event_permission",
+	"EM Ticket Type": "event_management.permissions.has_linked_permission",
+	"EM Add On": "event_management.permissions.has_linked_permission",
+}
 
 # Document Events
 # ---------------

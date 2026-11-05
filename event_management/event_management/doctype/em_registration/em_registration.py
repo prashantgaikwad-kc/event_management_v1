@@ -68,6 +68,17 @@ class EMRegistration(Document):
 		finally:
 			frappe.flags.em_ticket_issuance = was_issuing
 
+		def queue_ticket_email():
+			try:
+				frappe.enqueue(
+					"event_management.event_management.doctype.em_ticket.em_ticket.send_ticket_email",
+					registration_name=self.name,
+				)
+			except Exception:
+				frappe.logger("event_management").exception("Could not queue ticket email for %s", self.name)
+
+		frappe.db.after_commit.add(queue_ticket_email)
+
 	def lock_existing_registration(self):
 		if self.is_new():
 			self.ticket_code = frappe.generate_hash(length=16)
@@ -93,7 +104,13 @@ class EMRegistration(Document):
 			return
 		if not self.is_new() and self.status == self._previous_status:
 			return
-		if "System Manager" not in frappe.get_roles():
+		attendee_cancellation = (
+			self.status == "Cancelled"
+			and self._previous_status in ("Pending", "Confirmed")
+			and self.owner == frappe.session.user
+			and frappe.flags.get("em_attendee_cancellation") == self.name
+		)
+		if "System Manager" not in frappe.get_roles() and not attendee_cancellation:
 			frappe.throw("Only Event managers can change registration status.", frappe.PermissionError)
 		if not self.is_new() and self._previous_status == "Cancelled":
 			frappe.throw("Cancelled registrations cannot be reopened.")
@@ -199,6 +216,72 @@ class EMRegistration(Document):
 	def calculate_total(self):
 		self.total_amount = flt(self._ticket.price) * cint(self.quantity)
 		self.total_amount += sum(flt(row.amount) for row in self.add_ons if row.add_on)
+
+
+@frappe.whitelist()
+def get_my_registrations():
+	if frappe.session.user == "Guest":
+		frappe.throw("Login is required.", frappe.PermissionError)
+	registrations = frappe.db.get_all(
+		"EM Registration", filters={"owner": frappe.session.user},
+		fields=["name", "event", "ticket_type", "quantity", "total_amount", "status"],
+		order_by="creation desc",
+	)
+	if not registrations:
+		return []
+	names = [row.name for row in registrations]
+	checked_in = set(frappe.db.get_all(
+		"EM Ticket", filters={"registration": ["in", names], "status": "Checked In"},
+		pluck="registration",
+	))
+	add_ons = frappe.db.get_all(
+		"EM Registration Add On", filters={"parent": ["in", names], "parenttype": "EM Registration"},
+		fields=["parent", "add_on", "quantity", "amount"], order_by="idx asc",
+	)
+	events = {row.name: row.event_name for row in frappe.db.get_all(
+		"EM Event", filters={"name": ["in", list({row.event for row in registrations})]},
+		fields=["name", "event_name"],
+	)}
+	ticket_types = {row.name: row.ticket_name for row in frappe.db.get_all(
+		"EM Ticket Type", filters={"name": ["in", list({row.ticket_type for row in registrations})]},
+		fields=["name", "ticket_name"],
+	)}
+	add_on_names = {row.add_on for row in add_ons}
+	add_on_labels = {row.name: row.add_on_name for row in frappe.db.get_all(
+		"EM Add On", filters={"name": ["in", list(add_on_names)]},
+		fields=["name", "add_on_name"],
+	)} if add_on_names else {}
+	registrations_by_name = {row.name: row for row in registrations}
+	for row in registrations:
+		row.event_name = events.get(row.event, row.event)
+		row.ticket_name = ticket_types.get(row.ticket_type, row.ticket_type)
+		row.can_cancel = row.status in ("Pending", "Confirmed") and row.name not in checked_in
+		row.add_ons = []
+	for add_on in add_ons:
+		add_on.add_on_name = add_on_labels.get(add_on.add_on, add_on.add_on)
+		registrations_by_name[add_on.parent].add_ons.append(add_on)
+	return registrations
+
+
+@frappe.whitelist(methods=["POST"])
+def cancel_my_registration(registration):
+	if frappe.session.user == "Guest":
+		frappe.throw("Login is required.", frappe.PermissionError)
+	current = frappe.db.get_value(
+		"EM Registration", registration, ["owner", "status"], as_dict=True, for_update=True,
+	)
+	if not current or current.owner != frappe.session.user:
+		frappe.throw("Not permitted to cancel this registration.", frappe.PermissionError)
+	if current.status not in ("Pending", "Confirmed"):
+		frappe.throw("This registration cannot be cancelled.")
+	doc = frappe.get_doc("EM Registration", registration)
+	doc.status = "Cancelled"
+	frappe.flags.em_attendee_cancellation = registration
+	try:
+		doc.save(ignore_permissions=True)
+	finally:
+		frappe.flags.em_attendee_cancellation = None
+	return {"name": doc.name, "status": doc.status}
 
 
 @frappe.whitelist()

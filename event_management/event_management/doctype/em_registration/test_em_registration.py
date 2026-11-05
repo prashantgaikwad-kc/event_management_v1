@@ -3,7 +3,9 @@ from frappe.handler import is_valid_http_method
 from frappe.tests import IntegrationTestCase
 
 from event_management.event_management.doctype.em_registration.em_registration import (
+	cancel_my_registration,
 	check_in,
+	get_my_registrations,
 	ticket_qr_code,
 )
 from event_management.event_management.doctype.em_ticket.em_ticket import check_in_ticket, get_my_tickets
@@ -221,3 +223,100 @@ class IntegrationTestEMRegistration(IntegrationTestCase):
 				doc.save(ignore_permissions=True)
 		finally:
 			frappe.set_user(user)
+
+	def test_my_registrations_are_owner_scoped(self):
+		mine = self.registration(add_on_quantity=1).insert()
+		other = frappe.get_doc({
+			"doctype": "User", "email": f"other-{frappe.generate_hash(length=8)}@example.com",
+			"first_name": "Other", "send_welcome_email": 0,
+		}).insert(ignore_permissions=True)
+		user = frappe.session.user
+		try:
+			frappe.set_user(other.name)
+			theirs = self.registration().insert(ignore_permissions=True)
+			self.assertEqual([row.name for row in get_my_registrations()], [theirs.name])
+			frappe.set_user(user)
+			rows = get_my_registrations()
+			self.assertEqual([row.name for row in rows], [mine.name])
+			self.assertEqual(rows[0].event_name, self.event.event_name)
+			self.assertEqual(rows[0].ticket_name, self.ticket.ticket_name)
+			self.assertEqual(rows[0].quantity, 1)
+			self.assertEqual(rows[0].total_amount, 5)
+			self.assertTrue(rows[0].can_cancel)
+			self.assertEqual(rows[0].add_ons[0].add_on_name, self.add_on.add_on_name)
+		finally:
+			frappe.set_user(user)
+
+	def test_owner_cancellation_invalidates_issued_tickets(self):
+		doc = self.registration().insert()
+		doc.status = "Confirmed"
+		doc.save()
+		credential = get_my_tickets(doc.name)[0]["qr_credential"]
+		self.assertEqual(cancel_my_registration(doc.name)["status"], "Cancelled")
+		self.assertEqual(frappe.db.get_value("EM Registration", doc.name, "status"), "Cancelled")
+		self.assertEqual(get_my_tickets(doc.name)[0]["status"], "Cancelled")
+		with self.assertRaises(frappe.ValidationError):
+			check_in_ticket(credential)
+		with self.assertRaises(frappe.ValidationError):
+			cancel_my_registration(doc.name)
+
+	def test_pending_owner_can_cancel(self):
+		doc = self.registration().insert()
+		self.assertEqual(cancel_my_registration(doc.name)["status"], "Cancelled")
+		self.assertFalse(frappe.db.exists("EM Ticket", {"registration": doc.name}))
+
+	def test_attendee_cannot_change_other_statuses(self):
+		other = frappe.get_doc({
+			"doctype": "User", "email": f"attendee-{frappe.generate_hash(length=8)}@example.com",
+			"first_name": "Attendee", "send_welcome_email": 0,
+		}).insert(ignore_permissions=True)
+		user = frappe.session.user
+		try:
+			frappe.set_user(other.name)
+			doc = self.registration().insert(ignore_permissions=True)
+			doc.status = "Confirmed"
+			with self.assertRaises(frappe.PermissionError):
+				doc.save(ignore_permissions=True)
+		finally:
+			frappe.set_user(user)
+
+	def test_checked_in_ticket_blocks_owner_cancellation(self):
+		doc = self.registration().insert()
+		doc.status = "Confirmed"
+		doc.save()
+		credential = get_my_tickets(doc.name)[0]["qr_credential"]
+		check_in_ticket(credential)
+		self.assertFalse(get_my_registrations()[0].can_cancel)
+		with self.assertRaises(frappe.ValidationError):
+			cancel_my_registration(doc.name)
+		self.assertEqual(frappe.db.get_value("EM Registration", doc.name, "status"), "Confirmed")
+
+	def test_other_user_cannot_cancel_registration(self):
+		doc = self.registration().insert()
+		other = frappe.get_doc({
+			"doctype": "User", "email": f"other-{frappe.generate_hash(length=8)}@example.com",
+			"first_name": "Other", "send_welcome_email": 0,
+		}).insert(ignore_permissions=True)
+		user = frappe.session.user
+		try:
+			frappe.set_user(other.name)
+			with self.assertRaises(frappe.PermissionError):
+				cancel_my_registration(doc.name)
+			frappe.set_user("Guest")
+			with self.assertRaises(frappe.PermissionError):
+				get_my_registrations()
+			with self.assertRaises(frappe.PermissionError):
+				cancel_my_registration(doc.name)
+		finally:
+			frappe.set_user(user)
+
+	def test_owner_cancellation_requires_post(self):
+		request = getattr(frappe.local, "request", None)
+		try:
+			frappe.local.request = frappe._dict(method="GET")
+			with self.assertRaises(frappe.PermissionError):
+				is_valid_http_method(cancel_my_registration)
+			frappe.local.request.method = "POST"
+			is_valid_http_method(cancel_my_registration)
+		finally:
+			frappe.local.request = request

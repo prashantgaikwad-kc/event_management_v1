@@ -18,7 +18,9 @@
   "column_break_hozk",
   "start_date",
   "end_date",
-  "published"
+  "published",
+  "organizer",
+  "cover_image"
  ],
  "fields": [
   {
@@ -88,13 +90,25 @@
    "fieldtype": "Data",
    "label": "Route",
    "unique": 1
+  },
+  {
+   "fieldname": "organizer",
+   "fieldtype": "Link",
+   "label": "Organizer",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "cover_image",
+   "fieldtype": "Attach Image",
+   "label": "Cover Image"
   }
  ],
  "grid_page_length": 50,
  "has_web_view": 1,
  "is_published_field": "published",
  "links": [],
- "modified": "2026-11-03 14:15:08.431411",
+ "modified": "2026-11-05 21:23:35.945530",
  "modified_by": "Administrator",
  "module": "Event Management",
  "name": "EM Event",

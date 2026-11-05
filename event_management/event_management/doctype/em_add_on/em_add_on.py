@@ -2,12 +2,14 @@
 # For license information, please see license.txt
 
 import frappe
+from event_management.permissions import validate_linked_scope
 from frappe.model.document import Document
 from frappe.utils import cint, flt
 
 
 class EMAddOn(Document):
 	def validate(self):
+		validate_linked_scope(self)
 		frappe.db.get_value("EM Event", self.event, "name", for_update=True)
 		if not self.is_new():
 			frappe.db.get_value("EM Add On", self.name, "name", for_update=True)

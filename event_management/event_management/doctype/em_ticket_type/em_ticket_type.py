@@ -2,12 +2,14 @@
 # For license information, please see license.txt
 
 import frappe
+from event_management.permissions import validate_linked_scope
 from frappe.model.document import Document
 from frappe.utils import cint, flt, get_datetime
 
 
 class EMTicketType(Document):
 	def validate(self):
+		validate_linked_scope(self)
 		event_start = frappe.db.get_value("EM Event", self.event, "start_date", for_update=True)
 		if not self.is_new():
 			frappe.db.get_value("EM Ticket Type", self.name, "name", for_update=True)

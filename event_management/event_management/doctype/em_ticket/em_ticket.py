@@ -46,14 +46,22 @@ def _credential(token):
 
 
 @frappe.whitelist()
-def get_my_tickets(registration):
+def get_my_tickets(registration=None):
 	if frappe.session.user == "Guest":
 		frappe.throw("Login is required.", frappe.PermissionError)
-	owner = frappe.db.get_value("EM Registration", registration, "owner")
-	if not owner or owner != frappe.session.user:
-		frappe.throw("Not permitted to view these tickets.", frappe.PermissionError)
+	if registration:
+		owner = frappe.db.get_value("EM Registration", registration, "owner")
+		if not owner or owner != frappe.session.user:
+			frappe.throw("Not permitted to view these tickets.", frappe.PermissionError)
+		registrations = [registration]
+	else:
+		registrations = frappe.db.get_all(
+			"EM Registration", filters={"owner": frappe.session.user}, pluck="name"
+		)
+		if not registrations:
+			return []
 	rows = frappe.db.get_all(
-		"EM Ticket", filters={"registration": registration},
+		"EM Ticket", filters={"registration": ["in", registrations]},
 		fields=["name", "event", "ticket_type", "attendee_name", "status", "token", "checked_in_at"],
 	)
 	return [{
